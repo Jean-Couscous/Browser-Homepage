@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="A calm, customizable Kagi homepage for a new browser tab."
+    />
+    <title>New Tab</title>
+    <link rel="icon" href="assets/kagi-search.png" type="image/png" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <svg class="icon-library" aria-hidden="true">
+      <symbol id="icon-ban" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8" /><path d="m6.5 6.5 11 11" />
+      </symbol>
+      <symbol id="icon-apps" viewBox="0 0 24 24">
+        <circle cx="5" cy="5" r="2" /><circle cx="12" cy="5" r="2" />
+        <circle cx="19" cy="5" r="2" /><circle cx="5" cy="12" r="2" />
+        <circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" />
+        <circle cx="5" cy="19" r="2" /><circle cx="12" cy="19" r="2" />
+        <circle cx="19" cy="19" r="2" />
+      </symbol>
+      <symbol id="icon-search" viewBox="0 0 24 24">
+        <circle cx="10.8" cy="10.8" r="6.8" />
+        <path d="m16 16 4.2 4.2" />
+      </symbol>
+      <symbol id="icon-close" viewBox="0 0 24 24">
+        <path d="m6 6 12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="icon-plus" viewBox="0 0 24 24">
+        <path d="M12 5v14M5 12h14" />
+      </symbol>
+      <symbol id="icon-more" viewBox="0 0 24 24">
+        <circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" />
+        <circle cx="19" cy="12" r="1.5" />
+      </symbol>
+      <symbol id="icon-customize" viewBox="0 0 24 24">
+        <path d="M4 20h4L19 9l-4-4L4 16v4ZM13.5 6.5l4 4M15 3l1-1 6 6-1 1M20 12v9h-9" />
+      </symbol>
+      <symbol id="icon-check" viewBox="0 0 24 24">
+        <path d="m5 12 4.5 4.5L19 7" />
+      </symbol>
+    </svg>
+
+    <header class="topbar">
+      <nav class="topbar__nav" aria-label="Quick links">
+        <div class="popover-wrap">
+          <button
+            class="icon-button apps-button"
+            id="apps-button"
+            type="button"
+            aria-label="Kagi apps"
+            aria-expanded="false"
+            aria-controls="apps-menu"
+          >
+            <svg><use href="#icon-apps"></use></svg>
+          </button>
+          <div class="popover apps-menu" id="apps-menu" hidden>
+            <p class="popover__label">Kagi apps</p>
+            <div class="apps-grid">
+              <a href="https://assistant.kagi.com" class="app-item">
+                <span class="app-icon"><img src="assets/kagi-assistant.png" alt="" /></span>
+                <span>Assistant</span>
+              </a>
+              <a href="https://translate.kagi.com" class="app-item">
+                <span class="app-icon"><img src="assets/kagi-translate.png" alt="" /></span>
+                <span>Translate</span>
+              </a>
+              <a href="https://kagi.com/smallweb" class="app-item">
+                <span class="app-icon"><img src="assets/kagi-search.png" alt="" /></span>
+                <span>Small Web</span>
+              </a>
+              <a href="https://kagi.com/settings" class="app-item">
+                <span class="app-icon"><img src="assets/kagi-search.png" alt="" /></span>
+                <span>Settings</span>
+              </a>
+              <a href="https://help.kagi.com" class="app-item">
+                <span class="app-icon"><img src="assets/kagi-help.png" alt="" /></span>
+                <span>Help</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="homepage">
+      <section class="search-section" aria-labelledby="homepage-title">
+        <div class="brand-lockup">
+          <h1 class="wordmark" id="homepage-title" aria-label="Kagi">
+            <svg viewBox="0 0 235 125" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path d="M217.188 86.0043V91.3462H232.873V29.1132H217.188V86.0043Z" fill="currentColor" />
+              <path d="M224.898 20.2991C230.477 20.2991 235 15.755 235 10.1496C235 4.54412 230.477 0 224.898 0C219.319 0 214.796 4.54412 214.796 10.1496C214.796 15.755 219.319 20.2991 224.898 20.2991Z" fill="currentColor" />
+              <path d="M182.63 100.16H160.033C153.919 100.16 152.856 93.4829 153.919 90.812C154.451 89.4765 155.78 87.6068 156.843 86.2714C161.097 88.6752 166.148 90.0107 171.464 90.0107C188.478 90.0107 202.036 76.1218 202.036 59.2949C202.036 50.2137 198.048 42.2009 191.934 36.3248L192.731 35.5235C194.326 33.9209 196.719 32.8526 199.111 33.1197L202.833 33.3868V18.6966H196.453C189.01 18.6966 182.895 23.2372 180.237 29.6474C177.579 28.8462 174.655 28.312 171.73 28.312C154.717 28.312 141.159 42.2009 141.159 59.0278C141.159 65.7051 143.286 72.1154 147.007 77.1902C146.476 77.7244 145.678 78.2586 145.147 78.5257C144.881 78.7927 144.615 79.0598 144.349 79.3269C138.235 85.203 135.311 92.6816 136.906 101.229C137.703 105.769 141.691 110.577 145.678 113.248C148.337 115.118 151.793 115.919 155.248 115.919L180.769 114.85C183.693 114.85 186.351 116.186 187.946 118.857L191.136 125L206.821 119.658L204.162 113.782C200.175 105.502 191.934 100.16 182.63 100.16ZM171.73 44.6047C179.705 44.6047 186.351 51.2821 186.351 59.2949C186.351 67.3077 179.705 73.9851 171.73 73.9851C163.755 73.9851 157.109 67.3077 157.109 59.2949C157.109 51.015 163.489 44.6047 171.73 44.6047Z" fill="currentColor" />
+              <path d="M93.5748 28.0449C77.6246 28.8461 64.3327 41.6667 63.2694 57.6923C61.9402 76.656 76.8271 92.4145 95.1698 92.4145C101.284 92.4145 106.867 88.9423 111.652 86.0043V91.6132H127.336V59.0278C126.539 41.1325 111.652 27.2436 93.5748 28.0449ZM95.1698 77.4573C85.5997 77.4573 78.1563 69.7115 78.1563 60.3632C78.1563 50.7479 85.8655 43.2692 95.1698 43.2692C104.74 43.2692 112.183 51.0149 112.183 60.3632C112.449 69.7115 104.74 77.4573 95.1698 77.4573Z" fill="currentColor" />
+              <path d="M63.535 29.1133H41.4705L22.3303 48.344L15.6844 55.0214V18.1624H0V91.6133H15.6844V64.1026L22.3303 70.7799V70.5128L43.0655 91.6133H65.13L31.3687 59.562L63.535 29.1133Z" fill="currentColor" />
+            </svg>
+          </h1>
+          <img
+            class="homepage-companion"
+            id="homepage-companion"
+            src="assets/doggo.svg"
+            alt=""
+            title="Doggo, Kagi's mascot"
+            width="132"
+            height="112"
+          />
+        </div>
+        <p class="wordmark-caption">Search without ads or trackers.</p>
+
+        <div class="search-container">
+          <form class="search-form" id="search-form" action="https://kagi.com/search" method="get" role="search">
+            <svg class="search-form__leading"><use href="#icon-search"></use></svg>
+            <input
+              id="search-input"
+              name="q"
+              type="text"
+              placeholder="Search Kagi"
+              aria-label="Search Kagi"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              autofocus
+            />
+            <button class="search-action clear-button" id="clear-search" type="button" aria-label="Clear search" hidden>
+              <svg><use href="#icon-close"></use></svg>
+            </button>
+            <span class="search-divider" aria-hidden="true"></span>
+            <button class="search-action search-submit" type="submit" aria-label="Search">
+              <svg><use href="#icon-search"></use></svg>
+            </button>
+          </form>
+        </div>
+
+        <div class="search-hint" aria-hidden="true">
+          <span>Press</span><kbd>/</kbd><span>to search</span>
+        </div>
+      </section>
+
+      <section class="shortcuts-section" id="shortcuts-section" aria-label="Shortcuts">
+        <div class="shortcuts" id="shortcuts"></div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <button class="customize-button" id="customize-button" type="button">
+        <svg><use href="#icon-customize"></use></svg>
+        <span>Customize this page</span>
+      </button>
+    </footer>
+
+    <dialog class="shortcut-dialog" id="shortcut-dialog" aria-labelledby="shortcut-dialog-title">
+      <form id="shortcut-form">
+        <div class="dialog-heading">
+          <h2 id="shortcut-dialog-title">Add shortcut</h2>
+          <button class="icon-button dialog-close" type="button" aria-label="Close">
+            <svg><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+        <label class="field-label" for="shortcut-name">Name</label>
+        <input class="text-field" id="shortcut-name" name="name" type="text" maxlength="24" required placeholder="My favorite site" />
+        <label class="field-label" for="shortcut-url">URL</label>
+        <input class="text-field" id="shortcut-url" name="url" type="text" required placeholder="https://example.com" inputmode="url" />
+        <p class="field-error" id="shortcut-error" role="alert"></p>
+        <div class="dialog-actions">
+          <button class="button button--secondary dialog-close" type="button">Cancel</button>
+          <button class="button button--primary" type="submit">Done</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="customize-panel" id="customize-panel" aria-labelledby="customize-title">
+      <div class="customize-panel__inner">
+        <div class="dialog-heading">
+          <h2 id="customize-title">Customize this page</h2>
+          <button class="icon-button" id="close-customize" type="button" aria-label="Close customization">
+            <svg><use href="#icon-close"></use></svg>
+          </button>
+        </div>
+
+        <section class="settings-section">
+          <h3>Appearance</h3>
+          <div class="theme-options" role="radiogroup" aria-label="Color theme">
+            <label class="theme-option">
+              <input type="radio" name="theme" value="system" />
+              <span class="theme-preview theme-preview--system"><i></i></span>
+              <span>System</span>
+            </label>
+            <label class="theme-option">
+              <input type="radio" name="theme" value="light" />
+              <span class="theme-preview theme-preview--light"><i></i></span>
+              <span>Light</span>
+            </label>
+            <label class="theme-option">
+              <input type="radio" name="theme" value="dark" />
+              <span class="theme-preview theme-preview--dark"><i></i></span>
+              <span>Dark</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3>Background</h3>
+          <div class="background-options" role="radiogroup" aria-label="Background photo">
+            <label class="background-option">
+              <input type="radio" name="background" value="none" />
+              <span class="background-preview background-preview--none">
+                <svg><use href="#icon-ban"></use></svg>
+              </span>
+              <span>None</span>
+            </label>
+            <label class="background-option">
+              <input type="radio" name="background" value="fox" />
+              <img class="background-preview" data-background-preview="fox" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              <span>Fox</span>
+            </label>
+            <label class="background-option">
+              <input type="radio" name="background" value="rain" />
+              <img class="background-preview" data-background-preview="rain" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              <span>Rain</span>
+            </label>
+            <label class="background-option">
+              <input type="radio" name="background" value="nature" />
+              <img class="background-preview" data-background-preview="nature" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+              <span>Nature</span>
+            </label>
+          </div>
+
+          <label class="setting-row" for="background-blur">
+            <span>
+              <strong>Background blur</strong>
+              <small>Soften the selected background photo</small>
+            </span>
+            <input
+              id="background-blur"
+              name="background-blur"
+              type="range"
+              min="0"
+              max="20"
+              step="1"
+              value="0"
+              aria-label="Background blur"
+            />
+            <span class="background-blur-value" id="background-blur-value">0 px</span>
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h3>Shortcuts</h3>
+          <label class="setting-row" for="show-shortcuts">
+            <span>
+              <strong>Show shortcuts</strong>
+              <small>Your favorite sites, one click away</small>
+            </span>
+            <span class="switch">
+              <input id="show-shortcuts" type="checkbox" role="switch" />
+              <span class="switch__track"></span>
+            </span>
+          </label>
+        </section>
+
+        <p class="privacy-note">
+          <svg><use href="#icon-check"></use></svg>
+          Your preferences stay on this device.
+        </p>
+      </div>
+    </dialog>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </body>
+</html>
