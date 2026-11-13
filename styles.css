@@ -397,11 +397,6 @@ button {
   object-position: center bottom;
 }
 
-/* The cat's line art is dark, so invert it to keep it legible on dark backgrounds. */
-[data-theme="dark"] .mascot--cat {
-  filter: invert(1) hue-rotate(180deg);
-}
-
 .wordmark {
   width: clamp(150px, 18vw, 188px);
   margin: 0;

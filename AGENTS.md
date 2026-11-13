@@ -11,6 +11,7 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 ## Animal modes
 
 - `kagi-home-animal` holds `cat` or `dog`. `FACT_SOURCES` maps each mode to its API and response shape; `applyAnimal` swaps the mascot, the panel radios, and the button label, and the footer refetches from the matching API. Add an animal in `ANIMALS`, `FACT_SOURCES`, and the `input[name="animal"]` radios together.
+- Use Kagi's official mascot artwork — Doggo (`assets/doggo.svg`) and Katto (`assets/katto.svg`, from <https://kagi.com/assets>) — rather than drawing a replacement.
 - `#mascot-switch` is a button that toggles the mode, so the visible mascot must always match `state.animal`. Keep both mascots in the markup and toggle them with `hidden` instead of swapping `src`.
 - `kagi-home-show-animal-fact` controls footer visibility and falls back to the legacy `kagi-home-show-cat-fact` key; no request is made while the fact is hidden.
 
