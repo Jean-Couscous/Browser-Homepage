@@ -5,24 +5,30 @@ const STORAGE_KEYS = {
   shortcuts: "kagi-home-shortcuts",
   showShortcuts: "kagi-home-show-shortcuts",
   background: "kagi-home-background",
+  backgroundImage: "kagi-home-background-image",
   backgroundBlur: "kagi-home-background-blur",
 };
 
 const CUSTOM_SHORTCUT_COLORS = ["#6c5edc", "#4a67c7", "#3f8611", "#da5819", "#707077", "#18181a"];
 const MAX_SHORTCUTS = 10;
 
-const UNSPLASH_PHOTOS = {
-  fox: "photo-1474511320723-9a56873867b5",
-  rain: "photo-1515694346937-94d85e41e6f0",
-  nature: "photo-1441974231531-c6227db76b6e",
+const BACKGROUND_OPTIONS = ["none", "custom"];
+const MAX_BACKGROUND_IMAGE_LENGTH = 1800000;
+
+// Each attempt downscales the chosen photo further so the data URL fits in local storage.
+const BACKGROUND_IMAGE_ATTEMPTS = [
+  { width: 2560, height: 1440, quality: 0.82 },
+  { width: 1920, height: 1080, quality: 0.78 },
+  { width: 1440, height: 900, quality: 0.74 },
+  { width: 1024, height: 640, quality: 0.7 },
+];
+
+const BACKGROUND_UPLOAD_ERRORS = {
+  type: "That file isn't an image.",
+  read: "That image couldn't be read.",
+  large: "That image is too large to save. Try a smaller photo.",
+  storage: "This browser couldn't save the image.",
 };
-
-// Aliases for compatibility with alternate naming.
-const BACKGROUND_PHOTOS = UNSPLASH_PHOTOS;
-const BACKGROUND_IMAGES = UNSPLASH_PHOTOS;
-const UNSPLASH_BACKGROUNDS = UNSPLASH_PHOTOS;
-
-const BACKGROUND_OPTIONS = ["none", "fox", "rain", "nature"];
 
 const elements = {
   searchForm: document.querySelector("#search-form"),
@@ -38,6 +44,13 @@ const elements = {
   shortcutError: document.querySelector("#shortcut-error"),
   customizeButton: document.querySelector("#customize-button"),
   customizePanel: document.querySelector("#customize-panel"),
+  backgroundFile: document.querySelector("#background-file"),
+  backgroundTile: document.querySelector(".background-preview--custom"),
+  backgroundPreview: document.querySelector("#background-custom-preview"),
+  backgroundPlaceholder: document.querySelector(".background-preview__icon"),
+  backgroundHint: document.querySelector("#background-custom-hint"),
+  backgroundChoose: document.querySelector("#background-custom-choose"),
+  backgroundRemove: document.querySelector("#background-custom-remove"),
   closeCustomize: document.querySelector("#close-customize"),
   showShortcuts: document.querySelector("#show-shortcuts"),
   toast: document.querySelector("#toast"),
@@ -58,8 +71,18 @@ function readStorage(key, fallback) {
 function writeStorage(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
+    return true;
   } catch {
     // The homepage remains functional when storage is unavailable.
+    return false;
+  }
+}
+
+function removeStorage(key) {
+  try {
+    localStorage.removeItem(key);
+  } catch {
+    // Storage may be unavailable when the browser restricts local files.
   }
 }
 
@@ -78,6 +101,12 @@ function isValidBackground(value) {
   return typeof value === "string" && BACKGROUND_OPTIONS.includes(value);
 }
 
+function isValidBackgroundImage(value) {
+  return typeof value === "string"
+    && value.startsWith("data:image/")
+    && value.length <= MAX_BACKGROUND_IMAGE_LENGTH;
+}
+
 function isValidBackgroundBlur(value) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 && number <= 20;
@@ -85,6 +114,7 @@ function isValidBackgroundBlur(value) {
 
 const storedShortcuts = readStorage(STORAGE_KEYS.shortcuts, []);
 const storedBackground = readStorage(STORAGE_KEYS.background, "none");
+const storedBackgroundImage = readStorage(STORAGE_KEYS.backgroundImage, null);
 const storedBackgroundBlur = readStorage(STORAGE_KEYS.backgroundBlur, 0);
 const state = {
   theme: readStorage(STORAGE_KEYS.theme, "system"),
@@ -93,6 +123,7 @@ const state = {
     : [],
   showShortcuts: readStorage(STORAGE_KEYS.showShortcuts, true) !== false,
   background: isValidBackground(storedBackground) ? storedBackground : "none",
+  backgroundImage: isValidBackgroundImage(storedBackgroundImage) ? storedBackgroundImage : null,
   backgroundBlur: isValidBackgroundBlur(storedBackgroundBlur) ? Number(storedBackgroundBlur) : 0,
 };
 
@@ -117,41 +148,144 @@ function applyTheme() {
   if (selectedTheme) selectedTheme.checked = true;
 }
 
-function getUnsplashUrl(photoId, width, height) {
-  const params = new URLSearchParams({
-    ixlib: "rb-4.0.3",
-    auto: "format",
-    fit: "crop",
-    w: String(width),
-    h: String(height),
-    q: "80",
-  });
-  return `https://images.unsplash.com/${photoId}?${params.toString()}`;
+function getBackgroundImage(background = state.background) {
+  if (background !== "custom" || !isValidBackgroundImage(state.backgroundImage)) return null;
+  return state.backgroundImage;
 }
 
-function getBackgroundImage(background = state.background) {
-  if (!isValidBackground(background) || background === "none") return null;
-  const photoId = UNSPLASH_PHOTOS[background];
-  if (!photoId) return null;
-  return getUnsplashUrl(photoId, 1920, 1080);
+function syncBackgroundControls() {
+  const image = getBackgroundImage("custom");
+
+  document.querySelectorAll('input[name="background"]').forEach((input) => {
+    input.checked = input.value === state.background;
+  });
+
+  if (elements.backgroundPreview) {
+    elements.backgroundPreview.hidden = !image;
+    if (image) elements.backgroundPreview.src = image;
+    else elements.backgroundPreview.removeAttribute("src");
+  }
+  if (elements.backgroundTile) {
+    elements.backgroundTile.classList.toggle("background-preview--filled", Boolean(image));
+  }
+  if (elements.backgroundPlaceholder) elements.backgroundPlaceholder.hidden = Boolean(image);
+  if (elements.backgroundChoose) {
+    elements.backgroundChoose.textContent = image ? "Replace image" : "Choose image";
+  }
+  if (elements.backgroundRemove) elements.backgroundRemove.hidden = !image;
+  if (elements.backgroundHint) {
+    elements.backgroundHint.textContent = image
+      ? "Saved on this device."
+      : "Use a photo from your device.";
+  }
 }
 
 function applyBackground(background = state.background) {
   if (!isValidBackground(background)) background = "none";
+  if (background === "custom" && !isValidBackgroundImage(state.backgroundImage)) background = "none";
   state.background = background;
 
-  if (background === "none" || !getBackgroundImage(background)) {
+  const image = getBackgroundImage(background);
+  if (image) {
+    document.body.style.setProperty("--background-image", `url("${image}")`);
+    document.body.classList.add("has-background");
+  } else {
     document.body.classList.remove("has-background");
     document.body.style.removeProperty("--background-image");
-    return;
   }
 
-  const imageUrl = getBackgroundImage(background);
-  document.body.style.setProperty("--background-image", `url("${imageUrl}")`);
-  document.body.classList.add("has-background");
+  syncBackgroundControls();
+}
 
-  const selectedBackground = document.querySelector(`input[name="background"][value="${background}"]`);
-  if (selectedBackground) selectedBackground.checked = true;
+function loadBackgroundImage(file) {
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      if (!image.naturalWidth || !image.naturalHeight) {
+        reject(new Error("Unsupported image"));
+        return;
+      }
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Unreadable image"));
+    };
+    image.src = objectUrl;
+  });
+}
+
+function encodeBackgroundImage(image) {
+  for (const attempt of BACKGROUND_IMAGE_ATTEMPTS) {
+    const scale = Math.min(1, attempt.width / image.naturalWidth, attempt.height / image.naturalHeight);
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+    const dataUrl = canvas.toDataURL("image/webp", attempt.quality);
+    if (isValidBackgroundImage(dataUrl)) return dataUrl;
+  }
+  return null;
+}
+
+async function storeBackgroundImage(file) {
+  if (!file.type.startsWith("image/")) return "type";
+
+  let image;
+  try {
+    image = await loadBackgroundImage(file);
+  } catch {
+    return "read";
+  }
+
+  const previousImage = state.backgroundImage;
+  const dataUrl = encodeBackgroundImage(image);
+  if (!dataUrl) return "large";
+
+  state.backgroundImage = dataUrl;
+  if (!writeStorage(STORAGE_KEYS.backgroundImage, dataUrl)) {
+    state.backgroundImage = previousImage;
+    applyBackground();
+    return "storage";
+  }
+
+  state.background = "custom";
+  writeStorage(STORAGE_KEYS.background, state.background);
+  applyBackground(state.background);
+  return null;
+}
+
+function removeBackgroundImage() {
+  state.backgroundImage = null;
+  removeStorage(STORAGE_KEYS.backgroundImage);
+  applyBackground("none");
+  writeStorage(STORAGE_KEYS.background, state.background);
+  showToast("Background image removed");
+}
+
+function openBackgroundPicker() {
+  elements.backgroundFile.value = "";
+  elements.backgroundFile.click();
+}
+
+async function handleBackgroundFileChange() {
+  const file = elements.backgroundFile.files?.[0];
+  if (!file) return;
+
+  try {
+    const error = await storeBackgroundImage(file);
+    showToast(error ? BACKGROUND_UPLOAD_ERRORS[error] : "Background image saved");
+  } catch {
+    showToast(BACKGROUND_UPLOAD_ERRORS.read);
+  } finally {
+    elements.backgroundFile.value = "";
+  }
 }
 
 function applyBackgroundBlur(value = state.backgroundBlur) {
@@ -165,19 +299,7 @@ function applyBackgroundBlur(value = state.backgroundBlur) {
 }
 
 function initializeBackgroundOptions() {
-  document.querySelectorAll("img[data-background-preview]").forEach((preview) => {
-    const key = preview.dataset.backgroundPreview;
-    if (!isValidBackground(key) || key === "none") return;
-    const photoId = UNSPLASH_PHOTOS[key];
-    if (!photoId) return;
-    const width = key === "rain" ? 400 : 400;
-    const height = key === "rain" ? 600 : 266;
-    preview.src = getUnsplashUrl(photoId, width, height);
-  });
-
-  const selectedBackground = document.querySelector(`input[name="background"][value="${state.background}"]`);
-  if (selectedBackground) selectedBackground.checked = true;
-
+  syncBackgroundControls();
   applyBackgroundBlur(state.backgroundBlur);
 }
 
@@ -466,12 +588,26 @@ document.querySelectorAll('input[name="theme"]').forEach((input) => {
 
 document.querySelectorAll('input[name="background"]').forEach((input) => {
   input.addEventListener("change", () => {
-    const value = isValidBackground(input.value) ? input.value : "none";
-    state.background = value;
+    if (!isValidBackground(input.value)) {
+      syncBackgroundControls();
+      return;
+    }
+
+    if (input.value === "custom" && !isValidBackgroundImage(state.backgroundImage)) {
+      syncBackgroundControls();
+      openBackgroundPicker();
+      return;
+    }
+
+    state.background = input.value;
     writeStorage(STORAGE_KEYS.background, state.background);
     applyBackground(state.background);
   });
 });
+
+elements.backgroundChoose.addEventListener("click", openBackgroundPicker);
+elements.backgroundRemove.addEventListener("click", removeBackgroundImage);
+elements.backgroundFile.addEventListener("change", handleBackgroundFileChange);
 
 const backgroundBlurSlider = document.querySelector("#background-blur");
 if (backgroundBlurSlider) {

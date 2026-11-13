@@ -14,7 +14,7 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 - Add and remove up to 10 custom shortcuts, stored only in your browser.
 - Automatically detect site-hosted SVG, PNG, and ICO shortcut favicons, with DuckDuckGo and a colored initial as fallbacks.
 - Use light, dark, or system themes based on Kagi's official palette.
-- Choose from Unsplash background photos or no background, with an adjustable blur.
+- Use your own photo as the background, or no background at all, with an adjustable blur.
 - Show or hide shortcuts from the customization panel.
 - Focus search instantly with `/`.
 - Browse Kagi apps.
@@ -44,4 +44,4 @@ Chrome reserves its built-in new-tab page for browser extensions. Replacing ever
 
 ## Privacy
 
-Preferences and shortcuts stay in the browser's local storage. Shortcut icons are requested from each website first, then from DuckDuckGo's favicon service if the website's icon is unavailable. If both requests fail or the browser is offline, the shortcut keeps its colored initial. Search queries are sent directly to Kagi only when you search and are never saved by the homepage. Background photos are requested from Unsplash when a background is selected.
+Preferences, shortcuts, and any custom background image stay in the browser's local storage. Shortcut icons are requested from each website first, then from DuckDuckGo's favicon service if the website's icon is unavailable. If both requests fail or the browser is offline, the shortcut keeps its colored initial. Search queries are sent directly to Kagi only when you search and are never saved by the homepage. A background image you pick is resized inside the browser, never uploaded, and the page makes no other external requests.

@@ -45,6 +45,11 @@
       <symbol id="icon-check" viewBox="0 0 24 24">
         <path d="m5 12 4.5 4.5L19 7" />
       </symbol>
+      <symbol id="icon-image" viewBox="0 0 24 24">
+        <rect x="3.5" y="5" width="17" height="14" rx="2.5" />
+        <circle cx="8.5" cy="10" r="1.4" />
+        <path d="m4.5 16.8 3.9-3.9a2 2 0 0 1 2.8 0l1.7 1.7 2.2-2.2a2 2 0 0 1 2.8 0l2.6 2.6" />
+      </symbol>
     </svg>
 
     <header class="topbar">
@@ -206,7 +211,7 @@
 
         <section class="settings-section">
           <h3>Background</h3>
-          <div class="background-options" role="radiogroup" aria-label="Background photo">
+          <div class="background-options" role="radiogroup" aria-label="Background image">
             <label class="background-option">
               <input type="radio" name="background" value="none" />
               <span class="background-preview background-preview--none">
@@ -215,26 +220,28 @@
               <span>None</span>
             </label>
             <label class="background-option">
-              <input type="radio" name="background" value="fox" />
-              <img class="background-preview" data-background-preview="fox" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-              <span>Fox</span>
-            </label>
-            <label class="background-option">
-              <input type="radio" name="background" value="rain" />
-              <img class="background-preview" data-background-preview="rain" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-              <span>Rain</span>
-            </label>
-            <label class="background-option">
-              <input type="radio" name="background" value="nature" />
-              <img class="background-preview" data-background-preview="nature" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-              <span>Nature</span>
+              <input type="radio" name="background" value="custom" />
+              <span class="background-preview background-preview--custom">
+                <svg class="background-preview__icon"><use href="#icon-image"></use></svg>
+                <img class="background-preview__image" id="background-custom-preview" alt="" hidden />
+              </span>
+              <span>Custom image</span>
             </label>
           </div>
+
+          <div class="background-custom">
+            <p class="background-custom__hint" id="background-custom-hint">Use a photo from your device.</p>
+            <div class="background-custom__actions">
+              <button class="button button--secondary" id="background-custom-choose" type="button">Choose image</button>
+              <button class="button button--secondary" id="background-custom-remove" type="button" hidden>Remove</button>
+            </div>
+          </div>
+          <input id="background-file" type="file" accept="image/*" hidden />
 
           <label class="setting-row" for="background-blur">
             <span>
               <strong>Background blur</strong>
-              <small>Soften the selected background photo</small>
+              <small>Soften the background image</small>
             </span>
             <input
               id="background-blur"
