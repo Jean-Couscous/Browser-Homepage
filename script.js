@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
   theme: "kagi-home-theme",
   shortcuts: "kagi-home-shortcuts",
   showShortcuts: "kagi-home-show-shortcuts",
+  showCatFact: "kagi-home-show-cat-fact",
   background: "kagi-home-background",
   backgroundImage: "kagi-home-background-image",
   backgroundBlur: "kagi-home-background-blur",
@@ -14,6 +15,9 @@ const MAX_SHORTCUTS = 10;
 
 const BACKGROUND_OPTIONS = ["none", "custom"];
 const MAX_BACKGROUND_IMAGE_LENGTH = 1800000;
+const MEOWFACTS_URL = "https://meowfacts.herokuapp.com/";
+const CAT_FACT_FALLBACK = "Cat facts are unavailable right now — try again in a moment.";
+const MAX_CAT_FACT_LENGTH = 500;
 
 // Each attempt downscales the chosen photo further so the data URL fits in local storage.
 const BACKGROUND_IMAGE_ATTEMPTS = [
@@ -35,6 +39,10 @@ const elements = {
   searchInput: document.querySelector("#search-input"),
   clearSearch: document.querySelector("#clear-search"),
   searchHint: document.querySelector(".search-hint"),
+  catFact: document.querySelector("#cat-fact"),
+  catFactText: document.querySelector("#cat-fact-text"),
+  catFactRefresh: document.querySelector("#cat-fact-refresh"),
+  showCatFact: document.querySelector("#show-cat-fact"),
   shortcuts: document.querySelector("#shortcuts"),
   shortcutsSection: document.querySelector("#shortcuts-section"),
   shortcutDialog: document.querySelector("#shortcut-dialog"),
@@ -122,6 +130,7 @@ const state = {
     ? storedShortcuts.filter(isValidShortcut).slice(0, MAX_SHORTCUTS)
     : [],
   showShortcuts: readStorage(STORAGE_KEYS.showShortcuts, true) !== false,
+  showCatFact: readStorage(STORAGE_KEYS.showCatFact, true) !== false,
   background: isValidBackground(storedBackground) ? storedBackground : "none",
   backgroundImage: isValidBackgroundImage(storedBackgroundImage) ? storedBackgroundImage : null,
   backgroundBlur: isValidBackgroundBlur(storedBackgroundBlur) ? Number(storedBackgroundBlur) : 0,
@@ -302,6 +311,52 @@ function showToast(message) {
   toastTimeout = window.setTimeout(() => {
     elements.toast.classList.remove("is-visible");
   }, 2600);
+}
+
+let catFactRequestId = 0;
+let catFactLoaded = false;
+
+function isValidCatFact(value) {
+  if (!value || typeof value !== "object") return false;
+  if (!Array.isArray(value.data)) return false;
+  const fact = value.data[0];
+  return typeof fact === "string" && fact.trim().length > 0 && fact.trim().length <= MAX_CAT_FACT_LENGTH;
+}
+
+async function fetchCatFact() {
+  if (!state.showCatFact || !elements.catFactText || !elements.catFactRefresh) return;
+  const requestId = ++catFactRequestId;
+  elements.catFact.classList.add("is-loading");
+  elements.catFactRefresh.disabled = true;
+  elements.catFactText.setAttribute("aria-busy", "true");
+
+  try {
+    const response = await fetch(MEOWFACTS_URL, { cache: "no-store" });
+    if (!response.ok) throw new Error("Cat fact request failed");
+    const payload = await response.json();
+    if (requestId !== catFactRequestId) return;
+    if (!isValidCatFact(payload)) throw new Error("Cat fact response was invalid");
+    elements.catFactText.textContent = payload.data[0].trim();
+    catFactLoaded = true;
+  } catch {
+    if (requestId !== catFactRequestId) return;
+    if (!catFactLoaded) {
+      elements.catFactText.textContent = CAT_FACT_FALLBACK;
+    }
+  } finally {
+    if (requestId === catFactRequestId) {
+      elements.catFact.classList.remove("is-loading");
+      elements.catFactRefresh.disabled = false;
+      elements.catFactText.removeAttribute("aria-busy");
+    }
+  }
+}
+
+function applyCatFactVisibility() {
+  if (!elements.catFact) return;
+  elements.catFact.hidden = !state.showCatFact;
+  if (elements.showCatFact) elements.showCatFact.checked = state.showCatFact;
+  if (state.showCatFact) fetchCatFact();
 }
 
 function createSvgIcon(symbol) {
@@ -623,6 +678,14 @@ elements.showShortcuts.addEventListener("change", () => {
   renderShortcuts();
 });
 
+elements.catFactRefresh.addEventListener("click", fetchCatFact);
+
+elements.showCatFact.addEventListener("change", () => {
+  state.showCatFact = elements.showCatFact.checked;
+  writeStorage(STORAGE_KEYS.showCatFact, state.showCatFact);
+  applyCatFactVisibility();
+});
+
 setupPopover("apps-button", "apps-menu");
 
 document.addEventListener("click", () => {
@@ -660,6 +723,7 @@ applyTheme();
 renderShortcuts();
 initializeBackgroundOptions();
 applyBackground();
+applyCatFactVisibility();
 
 // Autofocus can be ignored by some browsers when opening a local homepage.
 if (!elements.shortcutDialog.open && !elements.customizePanel.open) {
