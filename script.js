@@ -1,5 +1,16 @@
 "use strict";
 
+// The classic-script bundle in lib/ loads first and exposes this namespace.
+const {
+  createJsonStorage,
+  normalizeUrl,
+  faviconCandidates,
+  imageFileToDataUrl,
+  ImageError,
+} = BrowserLibraries;
+
+const storage = createJsonStorage();
+
 const STORAGE_KEYS = {
   theme: "kagi-home-theme",
   shortcuts: "kagi-home-shortcuts",
@@ -15,6 +26,7 @@ const CUSTOM_SHORTCUT_COLORS = ["#6c5edc", "#4a67c7", "#3f8611", "#da5819", "#70
 const MAX_SHORTCUTS = 10;
 
 const BACKGROUND_OPTIONS = ["none", "custom"];
+// The bundled image library's default size ladder keeps the data URL within this budget.
 const MAX_BACKGROUND_IMAGE_LENGTH = 1800000;
 
 const ANIMALS = ["cat", "dog"];
@@ -35,17 +47,10 @@ const FACT_LOADING = "Loading a fact…";
 const FACT_FALLBACK = "Facts are unavailable right now — try again in a moment.";
 const MAX_FACT_LENGTH = 500;
 
-// Each attempt downscales the chosen photo further so the data URL fits in local storage.
-const BACKGROUND_IMAGE_ATTEMPTS = [
-  { width: 2560, height: 1440, quality: 0.82 },
-  { width: 1920, height: 1080, quality: 0.78 },
-  { width: 1440, height: 900, quality: 0.74 },
-  { width: 1024, height: 640, quality: 0.7 },
-];
-
 const BACKGROUND_UPLOAD_ERRORS = {
   type: "That file isn't an image.",
   read: "That image couldn't be read.",
+  encode: "That image couldn't be processed.",
   large: "That image is too large to save. Try a smaller photo.",
   storage: "This browser couldn't save the image.",
 };
@@ -84,33 +89,6 @@ const elements = {
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 let toastTimeout;
 
-function readStorage(key, fallback) {
-  try {
-    const value = localStorage.getItem(key);
-    return value === null ? fallback : JSON.parse(value);
-  } catch {
-    return fallback;
-  }
-}
-
-function writeStorage(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-    return true;
-  } catch {
-    // The homepage remains functional when storage is unavailable.
-    return false;
-  }
-}
-
-function removeStorage(key) {
-  try {
-    localStorage.removeItem(key);
-  } catch {
-    // Storage may be unavailable when the browser restricts local files.
-  }
-}
-
 function isValidShortcut(value) {
   if (!value || typeof value !== "object") return false;
   if (typeof value.id !== "string" || typeof value.name !== "string") return false;
@@ -137,35 +115,31 @@ function isValidBackgroundBlur(value) {
   return Number.isFinite(number) && number >= 0 && number <= 20;
 }
 
-const storedShortcuts = readStorage(STORAGE_KEYS.shortcuts, []);
-const storedBackground = readStorage(STORAGE_KEYS.background, "none");
-const storedBackgroundImage = readStorage(STORAGE_KEYS.backgroundImage, null);
-const storedBackgroundBlur = readStorage(STORAGE_KEYS.backgroundBlur, 0);
+const storedShortcuts = storage.read(STORAGE_KEYS.shortcuts, []);
+const storedBackground = storage.read(STORAGE_KEYS.background, "none");
+const storedBackgroundImage = storage.read(STORAGE_KEYS.backgroundImage, null);
+const storedBackgroundBlur = storage.read(STORAGE_KEYS.backgroundBlur, 0);
 
 // The fact setting was stored under a cat-only key before dog mode existed.
-const storedShowAnimalFact = readStorage(
+const storedShowAnimalFact = storage.read(
   STORAGE_KEYS.showAnimalFact,
-  readStorage("kagi-home-show-cat-fact", true),
+  storage.read("kagi-home-show-cat-fact", true),
 );
 
 const state = {
-  theme: readStorage(STORAGE_KEYS.theme, "system"),
+  theme: storage.read(STORAGE_KEYS.theme, "system"),
   shortcuts: Array.isArray(storedShortcuts)
     ? storedShortcuts.filter(isValidShortcut).slice(0, MAX_SHORTCUTS)
     : [],
-  showShortcuts: readStorage(STORAGE_KEYS.showShortcuts, true) !== false,
+  showShortcuts: storage.read(STORAGE_KEYS.showShortcuts, true) !== false,
   showAnimalFact: storedShowAnimalFact !== false,
-  animal: readStorage(STORAGE_KEYS.animal, "cat"),
+  animal: storage.read(STORAGE_KEYS.animal, "cat"),
   background: isValidBackground(storedBackground) ? storedBackground : "none",
   backgroundImage: isValidBackgroundImage(storedBackgroundImage) ? storedBackgroundImage : null,
   backgroundBlur: isValidBackgroundBlur(storedBackgroundBlur) ? Number(storedBackgroundBlur) : 0,
 };
 
-try {
-  localStorage.removeItem("kagi-home-recent-searches");
-} catch {
-  // Storage may be unavailable when the browser restricts local files.
-}
+storage.remove("kagi-home-recent-searches");
 
 if (!["system", "light", "dark"].includes(state.theme)) state.theme = "system";
 if (!isValidBackground(state.background)) state.background = "none";
@@ -224,75 +198,35 @@ function applyBackground(background = state.background) {
   syncBackgroundControls();
 }
 
-function loadBackgroundImage(file) {
-  return new Promise((resolve, reject) => {
-    const objectUrl = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      if (!image.naturalWidth || !image.naturalHeight) {
-        reject(new Error("Unsupported image"));
-        return;
-      }
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      reject(new Error("Unreadable image"));
-    };
-    image.src = objectUrl;
-  });
-}
-
-function encodeBackgroundImage(image) {
-  for (const attempt of BACKGROUND_IMAGE_ATTEMPTS) {
-    const scale = Math.min(1, attempt.width / image.naturalWidth, attempt.height / image.naturalHeight);
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-    canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-
-    const context = canvas.getContext("2d");
-    if (!context) return null;
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-    const dataUrl = canvas.toDataURL("image/webp", attempt.quality);
-    if (isValidBackgroundImage(dataUrl)) return dataUrl;
-  }
-  return null;
-}
-
 async function storeBackgroundImage(file) {
-  if (!file.type.startsWith("image/")) return "type";
-
-  let image;
+  let dataUrl;
   try {
-    image = await loadBackgroundImage(file);
-  } catch {
-    return "read";
+    dataUrl = await imageFileToDataUrl(file, {
+      maxLength: MAX_BACKGROUND_IMAGE_LENGTH,
+    });
+  } catch (error) {
+    return error instanceof ImageError ? error.code : "read";
   }
 
   const previousImage = state.backgroundImage;
-  const dataUrl = encodeBackgroundImage(image);
-  if (!dataUrl) return "large";
-
   state.backgroundImage = dataUrl;
-  if (!writeStorage(STORAGE_KEYS.backgroundImage, dataUrl)) {
+  if (!storage.write(STORAGE_KEYS.backgroundImage, dataUrl)) {
     state.backgroundImage = previousImage;
     applyBackground();
     return "storage";
   }
 
   state.background = "custom";
-  writeStorage(STORAGE_KEYS.background, state.background);
+  storage.write(STORAGE_KEYS.background, state.background);
   applyBackground(state.background);
   return null;
 }
 
 function removeBackgroundImage() {
   state.backgroundImage = null;
-  removeStorage(STORAGE_KEYS.backgroundImage);
+  storage.remove(STORAGE_KEYS.backgroundImage);
   applyBackground("none");
-  writeStorage(STORAGE_KEYS.background, state.background);
+  storage.write(STORAGE_KEYS.background, state.background);
   showToast("Background image removed");
 }
 
@@ -400,7 +334,7 @@ function applyFactVisibility() {
 function setAnimal(animal) {
   if (!ANIMALS.includes(animal) || animal === state.animal) return;
   state.animal = animal;
-  writeStorage(STORAGE_KEYS.animal, state.animal);
+  storage.write(STORAGE_KEYS.animal, state.animal);
   applyAnimal();
   if (!state.showAnimalFact || !elements.animalFactText) return;
   // The previous fact belonged to the other animal, so a failed fetch must not
@@ -416,28 +350,6 @@ function createSvgIcon(symbol) {
   use.setAttribute("href", `#icon-${symbol}`);
   svg.append(use);
   return svg;
-}
-
-function getShortcutFaviconUrls(shortcutUrl) {
-  const url = new URL(shortcutUrl);
-  const faviconUrls = [];
-  const isGoogleMaps = url.hostname === "maps.google.com"
-    || (["google.com", "www.google.com"].includes(url.hostname) && url.pathname.startsWith("/maps"));
-
-  // Product icons avoid generic root favicons and low-resolution defaults.
-  if (isGoogleMaps) {
-    faviconUrls.push("https://www.google.com/images/branding/product/ico/maps15_bnuw3a_32dp.ico");
-  }
-  if (url.hostname === "music.youtube.com") {
-    faviconUrls.push("https://music.youtube.com/img/favicon_144.png");
-  }
-
-  faviconUrls.push(
-    ...["/favicon.svg", "/favicon.png", "/favicon.ico", "/apple-touch-icon.png"]
-      .map((path) => new URL(path, url).href),
-    `https://icons.duckduckgo.com/ip3/${encodeURIComponent(url.hostname)}.ico`,
-  );
-  return [...new Set(faviconUrls)];
 }
 
 function makeShortcutElement(shortcut) {
@@ -470,7 +382,7 @@ function makeShortcutElement(shortcut) {
     favicon.hidden = false;
     icon.classList.add("has-favicon");
   });
-  const faviconUrls = getShortcutFaviconUrls(shortcut.url);
+  const faviconUrls = faviconCandidates(shortcut.url);
   let faviconAttempt = 0;
   const tryNextFavicon = () => {
     if (faviconAttempt === faviconUrls.length) {
@@ -557,7 +469,7 @@ function closeShortcutMenus() {
 
 function removeShortcut(id, name) {
   state.shortcuts = state.shortcuts.filter((shortcut) => shortcut.id !== id);
-  writeStorage(STORAGE_KEYS.shortcuts, state.shortcuts);
+  storage.write(STORAGE_KEYS.shortcuts, state.shortcuts);
   renderShortcuts();
   showToast(`${name} removed`);
 }
@@ -567,16 +479,6 @@ function openShortcutDialog() {
   elements.shortcutError.textContent = "";
   elements.shortcutDialog.showModal();
   window.setTimeout(() => elements.shortcutName.focus(), 50);
-}
-
-function normalizeUrl(value) {
-  const trimmedValue = value.trim();
-  const withProtocol = /^https?:\/\//i.test(trimmedValue) ? trimmedValue : `https://${trimmedValue}`;
-  const url = new URL(withProtocol);
-  if (!["http:", "https:"].includes(url.protocol) || !url.hostname.includes(".")) {
-    throw new Error("Invalid URL");
-  }
-  return url.href;
 }
 
 function submitSearch(query) {
@@ -652,7 +554,7 @@ elements.shortcutForm.addEventListener("submit", (event) => {
     url,
     color: CUSTOM_SHORTCUT_COLORS[colorIndex],
   });
-  writeStorage(STORAGE_KEYS.shortcuts, state.shortcuts);
+  storage.write(STORAGE_KEYS.shortcuts, state.shortcuts);
   renderShortcuts();
   elements.shortcutDialog.close();
   showToast(`${name} added to your shortcuts`);
@@ -679,7 +581,7 @@ elements.closeCustomize.addEventListener("click", closeCustomizePanel);
 document.querySelectorAll('input[name="theme"]').forEach((input) => {
   input.addEventListener("change", () => {
     state.theme = input.value;
-    writeStorage(STORAGE_KEYS.theme, state.theme);
+    storage.write(STORAGE_KEYS.theme, state.theme);
     applyTheme();
   });
 });
@@ -698,7 +600,7 @@ document.querySelectorAll('input[name="background"]').forEach((input) => {
     }
 
     state.background = input.value;
-    writeStorage(STORAGE_KEYS.background, state.background);
+    storage.write(STORAGE_KEYS.background, state.background);
     applyBackground(state.background);
   });
 });
@@ -714,7 +616,7 @@ if (backgroundBlurSlider) {
       ? Number(backgroundBlurSlider.value)
       : 0;
     state.backgroundBlur = value;
-    writeStorage(STORAGE_KEYS.backgroundBlur, state.backgroundBlur);
+    storage.write(STORAGE_KEYS.backgroundBlur, state.backgroundBlur);
     applyBackgroundBlur(state.backgroundBlur);
   });
 }
@@ -725,7 +627,7 @@ systemTheme.addEventListener("change", () => {
 
 elements.showShortcuts.addEventListener("change", () => {
   state.showShortcuts = elements.showShortcuts.checked;
-  writeStorage(STORAGE_KEYS.showShortcuts, state.showShortcuts);
+  storage.write(STORAGE_KEYS.showShortcuts, state.showShortcuts);
   renderShortcuts();
 });
 
@@ -734,7 +636,7 @@ elements.showShortcuts.addEventListener("change", () => {
 if (elements.showAnimalFact) {
   elements.showAnimalFact.addEventListener("change", () => {
     state.showAnimalFact = elements.showAnimalFact.checked;
-    writeStorage(STORAGE_KEYS.showAnimalFact, state.showAnimalFact);
+    storage.write(STORAGE_KEYS.showAnimalFact, state.showAnimalFact);
     applyFactVisibility();
   });
 }

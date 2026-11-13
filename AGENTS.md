@@ -17,14 +17,14 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 
 ## Persistence
 
-- Settings live in `localStorage` under `kagi-home-*` keys, JSON-encoded through `readStorage` / `writeStorage`. A new setting needs all of: key in `STORAGE_KEYS`, a validator, a `state` default, an `apply*` function, an init call, and a change listener.
+- Settings live in `localStorage` under `kagi-home-*` keys, JSON-encoded through `createJsonStorage` from `lib/browser-libraries.js`. A new setting needs all of: key in `STORAGE_KEYS`, a validator, a `state` default, an `apply*` function, an init call, and a change listener.
 - Stored values can be stale or corrupt, so validators stay strict and invalid data falls back to defaults (`none`, `system`, `true`, 0).
 - Never store search queries or history; the page is privacy-oriented and queries go only to Kagi.
 
 ## Backgrounds
 
 - Only two keys exist: `none` and `custom`. A key must appear in both `BACKGROUND_OPTIONS` and an `input[name="background"]` radio in `index.html`; `syncBackgroundControls` keeps the radios, the tile preview, and `state.background` aligned — never set `.checked` by hand elsewhere.
-- Custom images come from the user's device: `encodeBackgroundImage` downscales through a canvas (`BACKGROUND_IMAGE_ATTEMPTS`), re-encodes as WebP, and `storeBackgroundImage` saves the data URL under `kagi-home-background-image`. Keep `MAX_BACKGROUND_IMAGE_LENGTH` well under the ~5 MB local-storage quota, and surface a failed `writeStorage` as a toast instead of dropping the image silently.
+- Custom images come from the user's device: `imageFileToDataUrl` downscales through a canvas, re-encodes as WebP, and `storeBackgroundImage` saves the data URL under `kagi-home-background-image`. Keep `MAX_BACKGROUND_IMAGE_LENGTH` well under the ~5 MB local-storage quota, and surface a failed `storage.write` as a toast instead of dropping the image silently.
 - `applyBackground` sets `--background-image` plus `has-background` on `<body>`; blur is `--background-blur` applied to the `body::before` scrim. There are no remote background images, and the page must not add any.
 
 ## Theme and icons
