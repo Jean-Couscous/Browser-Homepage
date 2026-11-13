@@ -2,6 +2,8 @@
 
 A Chrome-inspired browser start page for Kagi users, with direct search, custom shortcuts, and Kagi's official branding.
 
+**Live page:** <https://jean-couscous.github.io/Browser-Homepage/>
+
 <p align="center">
   <img src="assets/preview.png" alt="Kagi homepage showing the Doggo mascot, search field, custom shortcuts, and customization control" width="800">
 </p>
@@ -19,13 +21,17 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 
 ## Install
 
-Download or copy this project to a folder on your computer. Everything required is included: there are no dependencies, accounts, build tools, or external assets required to open the homepage.
+Nothing to install: open the [live page](https://jean-couscous.github.io/Browser-Homepage/) and set it as your browser's startup page. It runs from GitHub Pages with no build step.
+
+To run it offline instead, download or copy this project to a folder on your computer and open `index.html`. No dependencies, accounts, or build tools are needed either way.
 
 ## Use as Chrome's startup page
 
-1. Open `index.html` in Chrome and copy its local `file://` URL from the address bar.
+1. Open <https://jean-couscous.github.io/Browser-Homepage/> in Chrome.
 2. Open **Settings → On startup → Open a specific page or set of pages**.
-3. Add the copied URL as a startup page.
+3. Add the URL as a startup page.
+
+Settings and shortcuts are stored per site in `localStorage`, so a configuration made from a local `file://` copy does not carry over to the hosted page; add your shortcuts once on the hosted URL and they persist there.
 
 Chrome reserves its built-in new-tab page for browser extensions. Replacing every new tab, rather than only the startup page, requires a separate new-tab extension. Ungoogled-Chromium has a custom new tab flag.
 
