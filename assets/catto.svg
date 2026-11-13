@@ -1,0 +1,43 @@
+<svg viewBox="0 0 533 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- ground -->
+  <path d="M84 420H372" stroke="#18181A" stroke-width="6" stroke-linecap="round" />
+  <!-- tail -->
+  <path
+    d="M356 392c48 2 78-28 74-62-3-26-26-41-46-33-16 7-22 25-14 39 6 10 20 13 28 6"
+    stroke="#18181A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- body -->
+  <path
+    d="M204 206c-18 52-30 118-30 186v8h184v-8c0-68-12-134-30-186"
+    stroke="#18181A" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- front legs -->
+  <path d="M232 398v-22M300 398v-22" stroke="#18181A" stroke-width="9" stroke-linecap="round" />
+  <path d="M232 376c0 12-8 20-18 20M300 376c0 12 8 20 18 20" stroke="#18181A" stroke-width="7"
+    stroke-linecap="round" />
+  <!-- chest fluff -->
+  <path
+    d="M266 262c15 0 27 11 27 24 0 20-27 37-27 37s-27-17-27-37c0-13 12-24 27-24Z"
+    stroke="#18181A" stroke-width="8" stroke-linejoin="round" />
+  <!-- head -->
+  <circle cx="266" cy="150" r="76" stroke="#18181A" stroke-width="9" />
+  <!-- ears -->
+  <path d="M212 96 198 40 242 79" stroke="#18181A" stroke-width="9" stroke-linecap="round"
+    stroke-linejoin="round" />
+  <path d="M320 96 334 40 290 79" stroke="#18181A" stroke-width="9" stroke-linecap="round"
+    stroke-linejoin="round" />
+  <!-- face -->
+  <circle cx="238" cy="146" r="7" fill="#18181A" />
+  <circle cx="294" cy="146" r="7" fill="#18181A" />
+  <path d="M256 170h20l-10 12-10-12Z" fill="#18181A" />
+  <path d="M266 182v7" stroke="#18181A" stroke-width="6" stroke-linecap="round" />
+  <path d="M266 189c-5 7-13 8-18 3M266 189c5 7 13 8 18 3" stroke="#18181A" stroke-width="6"
+    stroke-linecap="round" />
+  <!-- whiskers -->
+  <path d="M196 158h-34M197 176l-33 8M199 194l-31 16" stroke="#18181A" stroke-width="6"
+    stroke-linecap="round" />
+  <path d="M336 158h34M335 176l33 8M333 194l31 16" stroke="#18181A" stroke-width="6"
+    stroke-linecap="round" />
+  <!-- yarn ball -->
+  <circle cx="120" cy="384" r="34" fill="#FCB219" />
+  <path d="M94 372c18-14 44-12 52 8M98 396c16 12 40 10 48-6M120 350c-13 22-13 46 0 68"
+    stroke="#18181A" stroke-width="6" stroke-linecap="round" />
+</svg>

@@ -6,7 +6,13 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 
 - No package manager, build step, linter, tests, or CI. Open `index.html` directly in chromium headlessly (`file://`); never use a python/node server unless the user asks.
 - `script.js` is deferred and wires everything at top level. Every element ID referenced in its `elements` map must exist in `index.html`.
-- Verification is manual in a browser: theme/background/shortcut persistence across reload, dark mode, and the 640 px width / 650 px height breakpoints. There is no test suite to run.
+- Verification is manual in a browser: theme/background/shortcut persistence across reload, dark mode, and the 640 px width / 650 px height breakpoints. Check the footer in both fact states (shown and hidden) — the customize button must stay bottom-right either way. There is no test suite to run.
+
+## Animal modes
+
+- `kagi-home-animal` holds `cat` or `dog`. `FACT_SOURCES` maps each mode to its API and response shape; `applyAnimal` swaps the mascot, the panel radios, and the button label, and the footer refetches from the matching API. Add an animal in `ANIMALS`, `FACT_SOURCES`, and the `input[name="animal"]` radios together.
+- `#mascot-switch` is a button that toggles the mode, so the visible mascot must always match `state.animal`. Keep both mascots in the markup and toggle them with `hidden` instead of swapping `src`.
+- `kagi-home-show-animal-fact` controls footer visibility and falls back to the legacy `kagi-home-show-cat-fact` key; no request is made while the fact is hidden.
 
 ## Persistence
 

@@ -4,7 +4,8 @@ const STORAGE_KEYS = {
   theme: "kagi-home-theme",
   shortcuts: "kagi-home-shortcuts",
   showShortcuts: "kagi-home-show-shortcuts",
-  showCatFact: "kagi-home-show-cat-fact",
+  showAnimalFact: "kagi-home-show-animal-fact",
+  animal: "kagi-home-animal",
   background: "kagi-home-background",
   backgroundImage: "kagi-home-background-image",
   backgroundBlur: "kagi-home-background-blur",
@@ -15,9 +16,24 @@ const MAX_SHORTCUTS = 10;
 
 const BACKGROUND_OPTIONS = ["none", "custom"];
 const MAX_BACKGROUND_IMAGE_LENGTH = 1800000;
-const MEOWFACTS_URL = "https://meowfacts.herokuapp.com/";
-const CAT_FACT_FALLBACK = "Cat facts are unavailable right now — try again in a moment.";
-const MAX_CAT_FACT_LENGTH = 500;
+
+const ANIMALS = ["cat", "dog"];
+
+// Each animal mode pairs a mascot with a public facts API and the shape of its response.
+const FACT_SOURCES = {
+  cat: {
+    url: "https://meowfacts.herokuapp.com/",
+    read: (payload) => payload?.data?.[0],
+  },
+  dog: {
+    url: "https://dogapi.dog/api/v2/facts",
+    read: (payload) => payload?.data?.[0]?.attributes?.body,
+  },
+};
+
+const FACT_LOADING = "Loading a fact…";
+const FACT_FALLBACK = "Facts are unavailable right now — try again in a moment.";
+const MAX_FACT_LENGTH = 500;
 
 // Each attempt downscales the chosen photo further so the data URL fits in local storage.
 const BACKGROUND_IMAGE_ATTEMPTS = [
@@ -39,9 +55,12 @@ const elements = {
   searchInput: document.querySelector("#search-input"),
   clearSearch: document.querySelector("#clear-search"),
   searchHint: document.querySelector(".search-hint"),
-  catFact: document.querySelector("#cat-fact"),
-  catFactText: document.querySelector("#cat-fact-text"),
-  showCatFact: document.querySelector("#show-cat-fact"),
+  animalFact: document.querySelector("#animal-fact"),
+  animalFactText: document.querySelector("#animal-fact-text"),
+  showAnimalFact: document.querySelector("#show-animal-fact"),
+  mascotSwitch: document.querySelector("#mascot-switch"),
+  mascotDog: document.querySelector(".mascot--dog"),
+  mascotCat: document.querySelector(".mascot--cat"),
   shortcuts: document.querySelector("#shortcuts"),
   shortcutsSection: document.querySelector("#shortcuts-section"),
   shortcutDialog: document.querySelector("#shortcut-dialog"),
@@ -123,13 +142,21 @@ const storedShortcuts = readStorage(STORAGE_KEYS.shortcuts, []);
 const storedBackground = readStorage(STORAGE_KEYS.background, "none");
 const storedBackgroundImage = readStorage(STORAGE_KEYS.backgroundImage, null);
 const storedBackgroundBlur = readStorage(STORAGE_KEYS.backgroundBlur, 0);
+
+// The fact setting was stored under a cat-only key before dog mode existed.
+const storedShowAnimalFact = readStorage(
+  STORAGE_KEYS.showAnimalFact,
+  readStorage("kagi-home-show-cat-fact", true),
+);
+
 const state = {
   theme: readStorage(STORAGE_KEYS.theme, "system"),
   shortcuts: Array.isArray(storedShortcuts)
     ? storedShortcuts.filter(isValidShortcut).slice(0, MAX_SHORTCUTS)
     : [],
   showShortcuts: readStorage(STORAGE_KEYS.showShortcuts, true) !== false,
-  showCatFact: readStorage(STORAGE_KEYS.showCatFact, true) !== false,
+  showAnimalFact: storedShowAnimalFact !== false,
+  animal: readStorage(STORAGE_KEYS.animal, "cat"),
   background: isValidBackground(storedBackground) ? storedBackground : "none",
   backgroundImage: isValidBackgroundImage(storedBackgroundImage) ? storedBackgroundImage : null,
   backgroundBlur: isValidBackgroundBlur(storedBackgroundBlur) ? Number(storedBackgroundBlur) : 0,
@@ -144,6 +171,7 @@ try {
 if (!["system", "light", "dark"].includes(state.theme)) state.theme = "system";
 if (!isValidBackground(state.background)) state.background = "none";
 if (!isValidBackgroundBlur(state.backgroundBlur)) state.backgroundBlur = 0;
+if (!ANIMALS.includes(state.animal)) state.animal = "cat";
 
 function applyTheme() {
   const resolvedTheme = state.theme === "system"
@@ -312,46 +340,81 @@ function showToast(message) {
   }, 2600);
 }
 
-let catFactRequestId = 0;
-let catFactLoaded = false;
+let factRequestId = 0;
+let factLoaded = false;
 
-function isValidCatFact(value) {
-  if (!value || typeof value !== "object") return false;
-  if (!Array.isArray(value.data)) return false;
-  const fact = value.data[0];
-  return typeof fact === "string" && fact.trim().length > 0 && fact.trim().length <= MAX_CAT_FACT_LENGTH;
+function extractFact(animal, payload) {
+  const source = FACT_SOURCES[animal];
+  if (!source) return null;
+  const fact = source.read(payload);
+  if (typeof fact !== "string") return null;
+  const cleanFact = fact.trim();
+  return cleanFact && cleanFact.length <= MAX_FACT_LENGTH ? cleanFact : null;
 }
 
-async function fetchCatFact() {
-  if (!state.showCatFact || !elements.catFactText) return;
-  const requestId = ++catFactRequestId;
-  elements.catFactText.setAttribute("aria-busy", "true");
+async function fetchAnimalFact() {
+  if (!state.showAnimalFact || !elements.animalFactText) return;
+  const animal = state.animal;
+  const source = FACT_SOURCES[animal];
+  if (!source) return;
+  const requestId = ++factRequestId;
+  elements.animalFactText.setAttribute("aria-busy", "true");
 
   try {
-    const response = await fetch(MEOWFACTS_URL, { cache: "no-store" });
-    if (!response.ok) throw new Error("Cat fact request failed");
+    const response = await fetch(source.url, { cache: "no-store" });
+    if (!response.ok) throw new Error("Fact request failed");
     const payload = await response.json();
-    if (requestId !== catFactRequestId) return;
-    if (!isValidCatFact(payload)) throw new Error("Cat fact response was invalid");
-    elements.catFactText.textContent = payload.data[0].trim();
-    catFactLoaded = true;
+    if (requestId !== factRequestId) return;
+    const fact = extractFact(animal, payload);
+    if (!fact) throw new Error("Fact response was invalid");
+    elements.animalFactText.textContent = fact;
+    factLoaded = true;
   } catch {
-    if (requestId !== catFactRequestId) return;
-    if (!catFactLoaded) {
-      elements.catFactText.textContent = CAT_FACT_FALLBACK;
+    if (requestId !== factRequestId) return;
+    if (!factLoaded) {
+      elements.animalFactText.textContent = FACT_FALLBACK;
     }
   } finally {
-    if (requestId === catFactRequestId) {
-      elements.catFactText.removeAttribute("aria-busy");
+    if (requestId === factRequestId) {
+      elements.animalFactText.removeAttribute("aria-busy");
     }
   }
 }
 
-function applyCatFactVisibility() {
-  if (!elements.catFact) return;
-  elements.catFact.hidden = !state.showCatFact;
-  if (elements.showCatFact) elements.showCatFact.checked = state.showCatFact;
-  if (state.showCatFact) fetchCatFact();
+function applyAnimal() {
+  const isCat = state.animal === "cat";
+  if (elements.mascotDog) elements.mascotDog.hidden = isCat;
+  if (elements.mascotCat) elements.mascotCat.hidden = !isCat;
+
+  if (elements.mascotSwitch) {
+    const label = isCat ? "Switch to dog facts" : "Switch to cat facts";
+    elements.mascotSwitch.setAttribute("aria-label", label);
+    elements.mascotSwitch.title = label;
+  }
+
+  document.querySelectorAll('input[name="animal"]').forEach((input) => {
+    input.checked = input.value === state.animal;
+  });
+}
+
+function applyFactVisibility() {
+  if (!elements.animalFact) return;
+  elements.animalFact.hidden = !state.showAnimalFact;
+  if (elements.showAnimalFact) elements.showAnimalFact.checked = state.showAnimalFact;
+  if (state.showAnimalFact) fetchAnimalFact();
+}
+
+function setAnimal(animal) {
+  if (!ANIMALS.includes(animal) || animal === state.animal) return;
+  state.animal = animal;
+  writeStorage(STORAGE_KEYS.animal, state.animal);
+  applyAnimal();
+  if (!state.showAnimalFact || !elements.animalFactText) return;
+  // The previous fact belonged to the other animal, so a failed fetch must not
+  // leave the loading text stuck in place.
+  factLoaded = false;
+  elements.animalFactText.textContent = FACT_LOADING;
+  fetchAnimalFact();
 }
 
 function createSvgIcon(symbol) {
@@ -673,13 +736,23 @@ elements.showShortcuts.addEventListener("change", () => {
   renderShortcuts();
 });
 
-// Guarded so a stale cached index.html without the cat fact controls can't
-// abort the rest of this script.
-if (elements.showCatFact) {
-  elements.showCatFact.addEventListener("change", () => {
-    state.showCatFact = elements.showCatFact.checked;
-    writeStorage(STORAGE_KEYS.showCatFact, state.showCatFact);
-    applyCatFactVisibility();
+// Guarded so a stale cached index.html without these controls can't abort the
+// rest of this script.
+if (elements.showAnimalFact) {
+  elements.showAnimalFact.addEventListener("change", () => {
+    state.showAnimalFact = elements.showAnimalFact.checked;
+    writeStorage(STORAGE_KEYS.showAnimalFact, state.showAnimalFact);
+    applyFactVisibility();
+  });
+}
+
+document.querySelectorAll('input[name="animal"]').forEach((input) => {
+  input.addEventListener("change", () => setAnimal(input.value));
+});
+
+if (elements.mascotSwitch) {
+  elements.mascotSwitch.addEventListener("click", () => {
+    setAnimal(state.animal === "cat" ? "dog" : "cat");
   });
 }
 
@@ -720,7 +793,8 @@ applyTheme();
 renderShortcuts();
 initializeBackgroundOptions();
 applyBackground();
-applyCatFactVisibility();
+applyAnimal();
+applyFactVisibility();
 
 // Autofocus can be ignored by some browsers when opening a local homepage.
 if (!elements.shortcutDialog.open && !elements.customizePanel.open) {

@@ -111,15 +111,16 @@
               <path d="M63.535 29.1133H41.4705L22.3303 48.344L15.6844 55.0214V18.1624H0V91.6133H15.6844V64.1026L22.3303 70.7799V70.5128L43.0655 91.6133H65.13L31.3687 59.562L63.535 29.1133Z" fill="currentColor" />
             </svg>
           </h1>
-          <img
+          <button
             class="homepage-companion"
-            id="homepage-companion"
-            src="assets/doggo.svg"
-            alt=""
-            title="Doggo, Kagi's mascot"
-            width="132"
-            height="112"
-          />
+            id="mascot-switch"
+            type="button"
+            aria-label="Switch to dog facts"
+            title="Switch to dog facts"
+          >
+            <img class="mascot mascot--dog" src="assets/doggo.svg" alt="" width="132" height="112" />
+            <img class="mascot mascot--cat" src="assets/catto.svg" alt="" width="132" height="112" hidden />
+          </button>
         </div>
         <p class="wordmark-caption">Search without ads or trackers.</p>
 
@@ -158,9 +159,9 @@
     </main>
 
     <footer class="footer">
-      <div class="cat-fact" id="cat-fact" hidden>
-        <svg class="cat-fact__icon" aria-hidden="true"><use href="#icon-paw"></use></svg>
-        <p class="cat-fact__text" id="cat-fact-text" aria-live="polite">Loading a cat fact…</p>
+      <div class="animal-fact" id="animal-fact" hidden>
+        <svg class="animal-fact__icon" aria-hidden="true"><use href="#icon-paw"></use></svg>
+        <p class="animal-fact__text" id="animal-fact-text" aria-live="polite">Loading a fact…</p>
       </div>
       <button class="customize-button" id="customize-button" type="button">
         <svg><use href="#icon-customize"></use></svg>
@@ -278,17 +279,27 @@
         </section>
 
         <section class="settings-section">
-          <h3>Cat fact</h3>
-          <label class="setting-row" for="show-cat-fact">
+          <h3>Animal fact</h3>
+          <label class="setting-row" for="show-animal-fact">
             <span>
-              <strong>Show cat fact</strong>
-              <small>A random cat fact in the footer</small>
+              <strong>Show animal fact</strong>
+              <small>A random fact in the footer</small>
             </span>
             <span class="switch">
-              <input id="show-cat-fact" type="checkbox" role="switch" />
+              <input id="show-animal-fact" type="checkbox" role="switch" />
               <span class="switch__track"></span>
             </span>
           </label>
+          <div class="segmented" role="radiogroup" aria-label="Animal">
+            <label class="segmented__option">
+              <input type="radio" name="animal" value="cat" />
+              <span>Cats</span>
+            </label>
+            <label class="segmented__option">
+              <input type="radio" name="animal" value="dog" />
+              <span>Dogs</span>
+            </label>
+          </div>
         </section>
 
         <p class="privacy-note">

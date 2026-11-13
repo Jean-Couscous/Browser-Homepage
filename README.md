@@ -5,7 +5,7 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 **Live page:** <https://jean-couscous.github.io/Browser-Homepage/>
 
 <p align="center">
-  <img src="assets/preview.png" alt="Kagi homepage showing the Doggo mascot, search field, custom shortcuts, and customization control" width="800">
+  <img src="assets/preview.png" alt="Kagi homepage showing the mascot, search field, custom shortcuts, and customization control" width="800">
 </p>
 
 ## Features
@@ -16,7 +16,9 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 - Use light, dark, or system themes based on Kagi's official palette.
 - Use your own photo as the background, or no background at all, with an adjustable blur.
 - Show or hide shortcuts from the customization panel.
-- Read a random cat fact from [meowfacts](https://github.com/wh-iterabb-it/meowfacts) in the footer, refreshed on each page load; you can turn it off in the customization panel.
+- Read a random cat or dog fact in the footer from [meowfacts](https://github.com/wh-iterabb-it/meowfacts) or [dogapi.dog](https://dogapi.dog), refreshed on each page load.
+- Switch between cats and dogs from the customization panel, or by clicking the mascot: Doggo for dogs, a cat for cats.
+- Turn the footer fact off from the customization panel.
 - Focus search instantly with `/`.
 - Browse Kagi apps.
 
@@ -45,4 +47,4 @@ Chrome reserves its built-in new-tab page for browser extensions. Replacing ever
 
 ## Privacy
 
-Preferences, shortcuts, and any custom background image stay in the browser's local storage. Shortcut icons are requested from each website first, then from DuckDuckGo's favicon service if the website's icon is unavailable. If both requests fail or the browser is offline, the shortcut keeps its colored initial. Search queries are sent directly to Kagi only when you search and are never saved by the homepage. A background image you pick is resized inside the browser, never uploaded. The only other external request is a single GET to meowfacts for the footer cat fact; facts are shown but never saved, and disabling the cat fact in the customization panel stops that request entirely.
+Preferences, shortcuts, and any custom background image stay in the browser's local storage. Shortcut icons are requested from each website first, then from DuckDuckGo's favicon service if the website's icon is unavailable. If both requests fail or the browser is offline, the shortcut keeps its colored initial. Search queries are sent directly to Kagi only when you search and are never saved by the homepage. A background image you pick is resized inside the browser, never uploaded. The only other external request is a single GET for the footer fact — to meowfacts in cat mode and to dogapi.dog in dog mode; facts are shown but never saved, and turning the fact off in the customization panel stops that request entirely.
