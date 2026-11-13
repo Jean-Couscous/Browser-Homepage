@@ -58,7 +58,6 @@ const elements = {
   animalFact: document.querySelector("#animal-fact"),
   animalFactText: document.querySelector("#animal-fact-text"),
   showAnimalFact: document.querySelector("#show-animal-fact"),
-  mascotSwitch: document.querySelector("#mascot-switch"),
   mascotDog: document.querySelector(".mascot--dog"),
   mascotCat: document.querySelector(".mascot--cat"),
   shortcuts: document.querySelector("#shortcuts"),
@@ -385,12 +384,6 @@ function applyAnimal() {
   const isCat = state.animal === "cat";
   if (elements.mascotDog) elements.mascotDog.hidden = isCat;
   if (elements.mascotCat) elements.mascotCat.hidden = !isCat;
-
-  if (elements.mascotSwitch) {
-    const label = isCat ? "Switch to dog facts" : "Switch to cat facts";
-    elements.mascotSwitch.setAttribute("aria-label", label);
-    elements.mascotSwitch.title = label;
-  }
 
   document.querySelectorAll('input[name="animal"]').forEach((input) => {
     input.checked = input.value === state.animal;
@@ -749,12 +742,6 @@ if (elements.showAnimalFact) {
 document.querySelectorAll('input[name="animal"]').forEach((input) => {
   input.addEventListener("change", () => setAnimal(input.value));
 });
-
-if (elements.mascotSwitch) {
-  elements.mascotSwitch.addEventListener("click", () => {
-    setAnimal(state.animal === "cat" ? "dog" : "cat");
-  });
-}
 
 setupPopover("apps-button", "apps-menu");
 

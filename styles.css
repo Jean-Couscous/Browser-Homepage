@@ -376,17 +376,8 @@ button {
   width: 132px;
   height: 112px;
   margin-left: 12px;
-  padding: 0;
-  border: 0;
-  border-radius: 12px;
   flex: 0 0 132px;
   display: block;
-  background: transparent;
-  transition: transform 140ms ease;
-}
-
-.homepage-companion:hover {
-  transform: translateY(-3px);
 }
 
 .mascot {

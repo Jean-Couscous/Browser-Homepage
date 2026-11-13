@@ -17,7 +17,7 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 - Use your own photo as the background, or no background at all, with an adjustable blur.
 - Show or hide shortcuts from the customization panel.
 - Read a random cat or dog fact in the footer from [meowfacts](https://github.com/wh-iterabb-it/meowfacts) or [dogapi.dog](https://dogapi.dog), refreshed on each page load.
-- Switch between cats and dogs from the customization panel, or by clicking the mascot: Doggo for dogs, Katto for cats.
+- Switch between cats and dogs from the customization panel; Doggo shows in dog mode and Katto in cat mode.
 - Turn the footer fact off from the customization panel.
 - Focus search instantly with `/`.
 - Browse Kagi apps.
