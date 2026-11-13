@@ -673,11 +673,15 @@ elements.showShortcuts.addEventListener("change", () => {
   renderShortcuts();
 });
 
-elements.showCatFact.addEventListener("change", () => {
-  state.showCatFact = elements.showCatFact.checked;
-  writeStorage(STORAGE_KEYS.showCatFact, state.showCatFact);
-  applyCatFactVisibility();
-});
+// Guarded so a stale cached index.html without the cat fact controls can't
+// abort the rest of this script.
+if (elements.showCatFact) {
+  elements.showCatFact.addEventListener("change", () => {
+    state.showCatFact = elements.showCatFact.checked;
+    writeStorage(STORAGE_KEYS.showCatFact, state.showCatFact);
+    applyCatFactVisibility();
+  });
+}
 
 setupPopover("apps-button", "apps-menu");
 
