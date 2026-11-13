@@ -48,8 +48,8 @@ const elements = {
   backgroundTile: document.querySelector(".background-preview--custom"),
   backgroundPreview: document.querySelector("#background-custom-preview"),
   backgroundPlaceholder: document.querySelector(".background-preview__icon"),
-  backgroundHint: document.querySelector("#background-custom-hint"),
-  backgroundChoose: document.querySelector("#background-custom-choose"),
+  backgroundCustom: document.querySelector("#background-custom"),
+  backgroundReplace: document.querySelector("#background-custom-replace"),
   backgroundRemove: document.querySelector("#background-custom-remove"),
   closeCustomize: document.querySelector("#close-customize"),
   showShortcuts: document.querySelector("#show-shortcuts"),
@@ -169,15 +169,7 @@ function syncBackgroundControls() {
     elements.backgroundTile.classList.toggle("background-preview--filled", Boolean(image));
   }
   if (elements.backgroundPlaceholder) elements.backgroundPlaceholder.hidden = Boolean(image);
-  if (elements.backgroundChoose) {
-    elements.backgroundChoose.textContent = image ? "Replace image" : "Choose image";
-  }
-  if (elements.backgroundRemove) elements.backgroundRemove.hidden = !image;
-  if (elements.backgroundHint) {
-    elements.backgroundHint.textContent = image
-      ? "Saved on this device."
-      : "Use a photo from your device.";
-  }
+  if (elements.backgroundCustom) elements.backgroundCustom.hidden = !image;
 }
 
 function applyBackground(background = state.background) {
@@ -605,7 +597,7 @@ document.querySelectorAll('input[name="background"]').forEach((input) => {
   });
 });
 
-elements.backgroundChoose.addEventListener("click", openBackgroundPicker);
+elements.backgroundReplace.addEventListener("click", openBackgroundPicker);
 elements.backgroundRemove.addEventListener("click", removeBackgroundImage);
 elements.backgroundFile.addEventListener("change", handleBackgroundFileChange);
 
