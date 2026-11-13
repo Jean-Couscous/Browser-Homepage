@@ -4,7 +4,7 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 
 ## Shape and workflow
 
-- No package manager, build step, linter, tests, or CI. Open `index.html` directly (the README targets `file://`); do not add tooling or start a server unless the user asks.
+- No package manager, build step, linter, tests, or CI. Open `index.html` directly in chromium headlessly (`file://`); never use a python/node server unless the user asks.
 - `script.js` is deferred and wires everything at top level. Every element ID referenced in its `elements` map must exist in `index.html`.
 - Verification is manual in a browser: theme/background/shortcut persistence across reload, dark mode, and the 640 px width / 650 px height breakpoints. There is no test suite to run.
 
