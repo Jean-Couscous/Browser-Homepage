@@ -367,20 +367,16 @@ button {
 }
 
 .brand-lockup {
-  --wordmark-width: clamp(150px, 18vw, 188px);
-  --companion-width: 132px;
-  --brand-gap: 12px;
-  display: grid;
-  grid-template-columns: var(--wordmark-width) var(--companion-width);
-  grid-template-rows: auto auto;
-  column-gap: var(--brand-gap);
-  align-items: end;
+  display: flex;
+  align-items: flex-end;
   justify-content: center;
 }
 
 .homepage-companion {
-  width: var(--companion-width);
+  width: 132px;
   height: 112px;
+  margin-left: 12px;
+  flex: 0 0 132px;
   display: block;
 }
 
@@ -393,7 +389,7 @@ button {
 }
 
 .wordmark {
-  width: var(--wordmark-width);
+  width: clamp(150px, 18vw, 188px);
   margin: 0;
   color: var(--wordmark);
   line-height: 1;
@@ -407,10 +403,6 @@ button {
 }
 
 .wordmark-caption {
-  grid-column: 1;
-  grid-row: 2;
-  justify-self: start;
-  width: max-content;
   margin: 14px 0 30px;
   color: var(--text-secondary);
   font-size: 14px;
@@ -1046,8 +1038,7 @@ dialog::backdrop {
 
 .background-options {
   display: grid;
-  grid-template-columns: repeat(2, 112px);
-  justify-content: start;
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
 }
 
@@ -1356,13 +1347,11 @@ dialog::backdrop {
     padding: 7vh 16px 36px;
   }
 
-  .brand-lockup {
-    --companion-width: 104px;
-    --brand-gap: 6px;
-  }
-
   .homepage-companion {
+    width: 104px;
     height: 96px;
+    margin-left: 6px;
+    flex-basis: 104px;
   }
 
   .wordmark-caption {
@@ -1417,13 +1406,14 @@ dialog::backdrop {
     padding-bottom: 24px;
   }
 
-  .brand-lockup {
-    --wordmark-width: 140px;
-    --companion-width: 104px;
+  .wordmark {
+    width: 140px;
   }
 
   .homepage-companion {
+    width: 104px;
     height: 88px;
+    flex-basis: 104px;
   }
 
   .wordmark-caption {
