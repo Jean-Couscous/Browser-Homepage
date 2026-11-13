@@ -41,7 +41,6 @@ const elements = {
   searchHint: document.querySelector(".search-hint"),
   catFact: document.querySelector("#cat-fact"),
   catFactText: document.querySelector("#cat-fact-text"),
-  catFactRefresh: document.querySelector("#cat-fact-refresh"),
   showCatFact: document.querySelector("#show-cat-fact"),
   shortcuts: document.querySelector("#shortcuts"),
   shortcutsSection: document.querySelector("#shortcuts-section"),
@@ -324,10 +323,8 @@ function isValidCatFact(value) {
 }
 
 async function fetchCatFact() {
-  if (!state.showCatFact || !elements.catFactText || !elements.catFactRefresh) return;
+  if (!state.showCatFact || !elements.catFactText) return;
   const requestId = ++catFactRequestId;
-  elements.catFact.classList.add("is-loading");
-  elements.catFactRefresh.disabled = true;
   elements.catFactText.setAttribute("aria-busy", "true");
 
   try {
@@ -345,8 +342,6 @@ async function fetchCatFact() {
     }
   } finally {
     if (requestId === catFactRequestId) {
-      elements.catFact.classList.remove("is-loading");
-      elements.catFactRefresh.disabled = false;
       elements.catFactText.removeAttribute("aria-busy");
     }
   }
@@ -677,8 +672,6 @@ elements.showShortcuts.addEventListener("change", () => {
   writeStorage(STORAGE_KEYS.showShortcuts, state.showShortcuts);
   renderShortcuts();
 });
-
-elements.catFactRefresh.addEventListener("click", fetchCatFact);
 
 elements.showCatFact.addEventListener("change", () => {
   state.showCatFact = elements.showCatFact.checked;

@@ -16,7 +16,7 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 - Use light, dark, or system themes based on Kagi's official palette.
 - Use your own photo as the background, or no background at all, with an adjustable blur.
 - Show or hide shortcuts from the customization panel.
-- Read a random cat fact from [meowfacts](https://github.com/wh-iterabb-it/meowfacts) in the footer, with a refresh button for a new one; you can turn it off in the customization panel.
+- Read a random cat fact from [meowfacts](https://github.com/wh-iterabb-it/meowfacts) in the footer, refreshed on each page load; you can turn it off in the customization panel.
 - Focus search instantly with `/`.
 - Browse Kagi apps.
 
