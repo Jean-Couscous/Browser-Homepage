@@ -5,7 +5,7 @@ A Chrome-inspired browser start page for Kagi users, with direct search, custom 
 **Live page:** <https://jean-couscous.github.io/Browser-Homepage/>
 
 <p align="center">
-  <img src="assets/demo.webp" alt="Animated demo of the Kagi homepage: searching, adding and removing a shortcut, switching themes, and switching to dog mode" width="800">
+  <img src="assets/preview.png" alt="Screenshot of the Kagi homepage with the search field, cat mascot, and customization button" width="800">
 </p>
 
 ## Features
