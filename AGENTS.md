@@ -4,7 +4,7 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 
 ## Shape and workflow
 
-- No package manager, build step, linter, tests, or CI. Open `index.html` directly in chromium headlessly (`file://`); never use a python/node server unless the user asks.
+- No package manager, build step, linter, or tests, and no CI beyond the `opencode-review` bot (`.github/workflows/opencode-review.yml`), which comments a review on pull requests. Open `index.html` directly in chromium headlessly (`file://`); never use a python/node server unless the user asks.
 - `script.js` is deferred and wires everything at top level. Every element ID referenced in its `elements` map must exist in `index.html`.
 - Verification is manual in a browser: theme/background/shortcut persistence across reload, dark mode, and the 640 px width / 650 px height breakpoints. The customize button must stay bottom-right in the footer. There is no test suite to run.
 
