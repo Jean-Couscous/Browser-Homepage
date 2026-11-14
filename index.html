@@ -51,11 +51,6 @@
         <circle cx="8.5" cy="10" r="1.4" />
         <path d="m4.5 16.8 3.9-3.9a2 2 0 0 1 2.8 0l1.7 1.7 2.2-2.2a2 2 0 0 1 2.8 0l2.6 2.6" />
       </symbol>
-      <symbol id="icon-paw" viewBox="0 0 24 24">
-        <circle cx="6" cy="9" r="1.7" /><circle cx="9.2" cy="6.2" r="1.7" />
-        <circle cx="14.8" cy="6.2" r="1.7" /><circle cx="18" cy="9" r="1.7" />
-        <path d="M12 12c2.4 0 4.8 1.9 4.8 4.3 0 1.6-1.2 2.8-2.8 2.7-.5 0-1.3-.2-2-.2s-1.5.2-2 .2c-1.6.1-2.8-1.1-2.8-2.7 0-2.4 2.4-4.3 4.8-4.3Z" />
-      </symbol>
     </svg>
 
     <header class="topbar">
@@ -154,10 +149,6 @@
     </main>
 
     <footer class="footer">
-      <div class="animal-fact" id="animal-fact" hidden>
-        <svg class="animal-fact__icon" aria-hidden="true"><use href="#icon-paw"></use></svg>
-        <p class="animal-fact__text" id="animal-fact-text" aria-live="polite">Loading a fact…</p>
-      </div>
       <button class="customize-button" id="customize-button" type="button">
         <svg><use href="#icon-customize"></use></svg>
         <span>Customize this page</span>
@@ -274,18 +265,8 @@
         </section>
 
         <section class="settings-section">
-          <h3>Animal fact</h3>
-          <label class="setting-row" for="show-animal-fact">
-            <span>
-              <strong>Show animal fact</strong>
-              <small>A random fact in the footer</small>
-            </span>
-            <span class="switch">
-              <input id="show-animal-fact" type="checkbox" role="switch" />
-              <span class="switch__track"></span>
-            </span>
-          </label>
-          <div class="segmented" role="radiogroup" aria-label="Animal">
+          <h3>Mascot</h3>
+          <div class="segmented" role="radiogroup" aria-label="Mascot">
             <label class="segmented__option">
               <input type="radio" name="animal" value="cat" />
               <span>Cats</span>
