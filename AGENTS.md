@@ -34,7 +34,7 @@ Static Kagi-themed browser start page: `index.html`, `styles.css`, `script.js`, 
 ## Shortcuts and interactions
 
 - `MAX_SHORTCUTS` is 10. URLs are normalized to http(s), adding `https://` when no protocol is given.
-- Favicons try site-hosted paths, then DuckDuckGo, with special cases for Google Maps and `music.youtube.com`; if all fail, the colored initial stays.
+- Favicons try site-hosted paths, then DuckDuckGo, with special cases for Google Maps and `music.youtube.com`; if all fail, the colored initial stays. The URL that loads is remembered per shortcut under `kagi-home-favicons`, pruned to existing shortcuts, and requested first on later renders so the probe chain is skipped; an entry must still appear in `faviconCandidates` or it is ignored, and a remembered URL that errors is dropped. The initial stays under the image until `load` so a slow or offline request never leaves an empty slot.
 - `/` and Ctrl/Cmd+K focus search unless an input is active or a dialog is open; Escape closes popovers and menus. Keep this working when adding controls.
 - Use native `<dialog>.showModal()`, `aria-expanded`, and `hidden` for menus/panels, matching existing markup.
 

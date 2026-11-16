@@ -19,6 +19,7 @@ const STORAGE_KEYS = {
   background: "kagi-home-background",
   backgroundImage: "kagi-home-background-image",
   backgroundBlur: "kagi-home-background-blur",
+  favicons: "kagi-home-favicons",
 };
 
 const CUSTOM_SHORTCUT_COLORS = ["#6c5edc", "#4a67c7", "#3f8611", "#da5819", "#707077", "#18181a"];
@@ -69,15 +70,27 @@ const elements = {
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 let toastTimeout;
 
-function isValidShortcut(value) {
-  if (!value || typeof value !== "object") return false;
-  if (typeof value.id !== "string" || typeof value.name !== "string") return false;
+function isHttpUrl(value) {
+  if (typeof value !== "string") return false;
   try {
-    const url = new URL(value.url);
+    const url = new URL(value);
     return url.protocol === "https:" || url.protocol === "http:";
   } catch {
     return false;
   }
+}
+
+function isValidShortcut(value) {
+  if (!value || typeof value !== "object") return false;
+  if (typeof value.id !== "string" || typeof value.name !== "string") return false;
+  return isHttpUrl(value.url);
+}
+
+function isValidFaviconCache(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  return Object.entries(value).every(
+    ([shortcutUrl, faviconUrl]) => isHttpUrl(shortcutUrl) && isHttpUrl(faviconUrl),
+  );
 }
 
 function isValidBackground(value) {
@@ -99,12 +112,14 @@ const storedShortcuts = storage.read(STORAGE_KEYS.shortcuts, []);
 const storedBackground = storage.read(STORAGE_KEYS.background, "none");
 const storedBackgroundImage = storage.read(STORAGE_KEYS.backgroundImage, null);
 const storedBackgroundBlur = storage.read(STORAGE_KEYS.backgroundBlur, 0);
+const storedFavicons = storage.read(STORAGE_KEYS.favicons, {});
 
 const state = {
   theme: storage.read(STORAGE_KEYS.theme, "system"),
   shortcuts: Array.isArray(storedShortcuts)
     ? storedShortcuts.filter(isValidShortcut).slice(0, MAX_SHORTCUTS)
     : [],
+  favicons: isValidFaviconCache(storedFavicons) ? storedFavicons : {},
   showShortcuts: storage.read(STORAGE_KEYS.showShortcuts, true) !== false,
   animal: storage.read(STORAGE_KEYS.animal, "cat"),
   background: isValidBackground(storedBackground) ? storedBackground : "none",
@@ -274,6 +289,34 @@ function createSvgIcon(symbol) {
   return svg;
 }
 
+function getCachedFavicon(shortcutUrl, candidates) {
+  const faviconUrl = state.favicons[shortcutUrl];
+  return typeof faviconUrl === "string" && candidates.includes(faviconUrl)
+    ? faviconUrl
+    : null;
+}
+
+function rememberFavicon(shortcutUrl, faviconUrl) {
+  if (!state.shortcuts.some((shortcut) => shortcut.url === shortcutUrl)) return;
+  if (state.favicons[shortcutUrl] === faviconUrl) return;
+  state.favicons[shortcutUrl] = faviconUrl;
+  storage.write(STORAGE_KEYS.favicons, state.favicons);
+}
+
+function forgetFavicon(shortcutUrl) {
+  if (!(shortcutUrl in state.favicons)) return;
+  delete state.favicons[shortcutUrl];
+  storage.write(STORAGE_KEYS.favicons, state.favicons);
+}
+
+function pruneFaviconCache() {
+  const activeUrls = new Set(state.shortcuts.map((shortcut) => shortcut.url));
+  const staleUrls = Object.keys(state.favicons).filter((url) => !activeUrls.has(url));
+  if (!staleUrls.length) return;
+  staleUrls.forEach((url) => { delete state.favicons[url]; });
+  storage.write(STORAGE_KEYS.favicons, state.favicons);
+}
+
 function makeShortcutElement(shortcut) {
   const wrapper = document.createElement("div");
   wrapper.className = "shortcut";
@@ -297,14 +340,22 @@ function makeShortcutElement(shortcut) {
   favicon.className = "shortcut__favicon";
   favicon.alt = "";
   favicon.hidden = true;
-  favicon.decoding = "async";
+  favicon.decoding = "sync";
   favicon.referrerPolicy = "no-referrer";
+
+  const candidates = faviconCandidates(shortcut.url);
+  const cachedFavicon = getCachedFavicon(shortcut.url, candidates);
+  const faviconUrls = cachedFavicon
+    ? [cachedFavicon, ...candidates.filter((url) => url !== cachedFavicon)]
+    : candidates;
+
   favicon.addEventListener("load", () => {
     fallback.hidden = true;
     favicon.hidden = false;
     icon.classList.add("has-favicon");
+    rememberFavicon(shortcut.url, favicon.src);
   });
-  const faviconUrls = faviconCandidates(shortcut.url);
+
   let faviconAttempt = 0;
   const tryNextFavicon = () => {
     if (faviconAttempt === faviconUrls.length) {
@@ -314,9 +365,23 @@ function makeShortcutElement(shortcut) {
     favicon.src = faviconUrls[faviconAttempt];
     faviconAttempt += 1;
   };
-  favicon.addEventListener("error", tryNextFavicon);
-  tryNextFavicon();
+
+  favicon.addEventListener("error", () => {
+    // A remembered icon can disappear; show the initial while retrying.
+    if (cachedFavicon && favicon.src === cachedFavicon) forgetFavicon(shortcut.url);
+    favicon.hidden = true;
+    fallback.hidden = false;
+    icon.classList.remove("has-favicon");
+    tryNextFavicon();
+  });
+
   icon.append(fallback, favicon);
+  if (cachedFavicon) {
+    // Request the remembered icon at once; it paints over the initial as soon
+    // as it arrives, while the initial covers a slow or failed request.
+    favicon.hidden = false;
+  }
+  tryNextFavicon();
 
   const name = document.createElement("span");
   name.className = "shortcut__name";
@@ -373,6 +438,7 @@ function makeAddShortcutElement() {
 }
 
 function renderShortcuts() {
+  pruneFaviconCache();
   elements.shortcuts.replaceChildren();
   const fragment = document.createDocumentFragment();
   state.shortcuts.forEach((shortcut) => fragment.append(makeShortcutElement(shortcut)));
